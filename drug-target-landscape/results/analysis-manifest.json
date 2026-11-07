@@ -1,0 +1,14 @@
+{
+  "scope": "clinical",
+  "database_sha256": "181fb9987037da15325689e3bab1e243c65d9dd458f5caa095423bccfe45c522",
+  "target_count": 2428,
+  "drug_count": 10779,
+  "relationship_count": 14523,
+  "candidate_date_window": "2015\u20132024",
+  "unit": "distinct linked drug records",
+  "limits": [
+    "Source-reported approval may be non-US and is a drug-level claim.",
+    "Candidate study dates are not verified first clinical entry or trial counts.",
+    "The dataset is not a complete matched cohort; do not infer failure or success rates."
+  ]
+}
