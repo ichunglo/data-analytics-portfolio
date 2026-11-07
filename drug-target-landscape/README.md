@@ -36,6 +36,9 @@ The SQLite snapshot stores drugs, targets, relationships, source evidence, study
 1. **Target ranking:** Count distinct linked drug records and overlay the subset with a source-reported drug approval.
 2. **Drug categories:** Compare small molecules, biologics, other, and unknown classifications across highly connected targets.
 3. **2015–2024 candidate evidence:** Compare selected study-date proxies by target and year. A cell counts linked drugs, not trials; dates are not verified first clinical entry.
+4. **Target classes and drug types:** Summarize the range of recorded target classifications and drug modalities, including unknowns.
+5. **Connections per drug:** Show how many target records are linked to each distinct drug in the selected view.
+6. **Approval evidence gaps:** Identify well-connected targets whose linked drug records have no approval recorded, for further source review.
 
 ![Heatmap of target records and selected study-date candidate years](figures/target-by-year.png)
 

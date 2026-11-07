@@ -6,7 +6,7 @@ from pathlib import Path
 
 PROJECT=Path(__file__).resolve().parents[1]
 sys.path[:0]=[str(PROJECT/'src'),str(PROJECT/'examples')]
-from analyze import analyze
+from analyze import analyze, summarize
 from create_demo import create
 
 
@@ -33,6 +33,19 @@ class AnalysisTest(unittest.TestCase):
 
     def test_invalid_scope_rejected(self):
         with self.assertRaises(ValueError):analyze(self.db,'unverified')
+
+    def test_summary_counts_distinct_drugs_and_target_records(self):
+        summary=summarize(analyze(self.db,'clinical'))
+        self.assertEqual(summary['classes'],{'GPCRs':1,'Kinases':1})
+        self.assertEqual(summary['categories']['Small molecule']['approval reported'],1)
+        self.assertEqual(summary['degree']['2'],1)
+        self.assertEqual(summary['degree']['1'],3)
+        self.assertEqual([r['target_id'] for r in summary['queue']],[])
+
+    def test_missing_approval_queue_excludes_targets_with_any_recorded_approval(self):
+        data=analyze(self.db,'clinical')
+        data['ranking'][1]['reported_approved']=0
+        self.assertEqual([r['target_id'] for r in summarize(data)['queue']],['T2'])
 
 
 if __name__=='__main__':unittest.main()

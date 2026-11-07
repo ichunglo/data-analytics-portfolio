@@ -5,7 +5,7 @@ import hashlib
 import json
 import re
 import sqlite3
-from collections import defaultdict
+from collections import Counter, defaultdict
 from pathlib import Path
 
 import matplotlib
@@ -56,6 +56,26 @@ def save(fig, path):
     plt.close(fig)
 
 
+def summarize(results):
+    """Calculate target and drug summaries without counting a drug twice."""
+    classes = Counter((r['target_category'] or 'Unclear') for r in results['ranking'])
+    drugs = {}
+    for row in results['links']:
+        drug = drugs.setdefault(row['drug_id'], {'category': row['drug_category'] or 'Unknown',
+                                                  'approved': row['approval_reported'], 'targets': set()})
+        if (drug['category'], drug['approved']) != (row['drug_category'] or 'Unknown', row['approval_reported']):
+            raise ValueError('Inconsistent drug category or approval status: ' + row['drug_id'])
+        drug['targets'].add(row['target_id'])
+    categories = defaultdict(Counter)
+    degree = Counter()
+    for drug in drugs.values():
+        categories[drug['category']]['approval reported' if drug['approved'] == 1 else 'approval not recorded'] += 1
+        n = len(drug['targets'])
+        degree['1' if n == 1 else '2' if n == 2 else '3–4' if n <= 4 else '5–9' if n <= 9 else '10+'] += 1
+    queue = [r for r in results['ranking'] if r['reported_approved'] == 0][:15]
+    return {'classes': classes, 'categories': categories, 'degree': degree, 'queue': queue}
+
+
 def plot(results, out, scope):
     plt.rcParams.update({'font.family':'DejaVu Sans','font.size':10,'axes.spines.top':False,
                          'axes.spines.right':False,'svg.fonttype':'none'})
@@ -84,6 +104,55 @@ def plot(results, out, scope):
         draw_heatmap(matrix,[display(r) for r in recent],[str(y) for y in YEARS],
           'Selected study-date candidates by target and year',
           f'TTD / registry candidates, 2015–2024; {view} view. Dates are not verified first entry or numbers of trials.',out/'target-by-year',figsize=(11,7))
+
+    summary = summarize(results)
+    classes = summary['classes'].most_common()
+    fig, ax = plt.subplots(figsize=(10, 6.5))
+    y = range(len(classes)); values = [v for _, v in classes]
+    ax.barh(y, values, color=[COLORS(.28 + .65*v/max(values)) for v in values])
+    for i, v in enumerate(values): ax.text(v+max(values)*.012, i, f'{v:,}', va='center', fontsize=9)
+    ax.set_yticks(list(y), [k for k, _ in classes]); ax.invert_yaxis()
+    ax.set_xlabel('Distinct target records'); ax.set_title('Which target classes are represented?', loc='left', weight='bold', fontsize=16)
+    ax.grid(axis='x', color='#e3ecef'); ax.set_axisbelow(True); ax.set_xlim(0,max(values)*1.16)
+    fig.text(.02,.015,f'TTD 2024 snapshot and paper-derived catalog; {view} view.\nClasses are source-derived; unclear classifications are retained.',fontsize=8,color='#526978')
+    fig.tight_layout(rect=(0,.07,1,1)); save(fig,out/'target-classes')
+
+    labels = ['Small molecule', 'Biologic', 'Other', 'Unknown']
+    for category in summary['categories']:
+        if category not in labels: labels.append(category)
+    reported = [summary['categories'][k]['approval reported'] for k in labels]
+    unrecorded = [summary['categories'][k]['approval not recorded'] for k in labels]
+    fig,ax=plt.subplots(figsize=(10,4.8)); y=range(len(labels))
+    ax.barh(y,reported,color='#176383',label='Approval reported')
+    ax.barh(y,unrecorded,left=reported,color='#b8d7df',label='Approval not recorded')
+    for i,(a,b) in enumerate(zip(reported,unrecorded)):
+        ax.text(a+b+max(reported+unrecorded)*.025,i,f'{a:,} / {b:,}',va='center',color='#123f60',fontsize=9)
+    ax.set_yticks(list(y),labels);ax.invert_yaxis();ax.set_xlabel('Distinct drug records')
+    ax.set_xlim(0,max(a+b for a,b in zip(reported,unrecorded))*1.32)
+    ax.set_title('Drug categories and recorded approvals',loc='left',weight='bold',fontsize=16)
+    ax.legend(frameon=False,loc='lower right');ax.grid(axis='x',color='#e3ecef');ax.set_axisbelow(True)
+    fig.text(.02,.015,f'Labels: approval reported / approval not recorded. Sources: TTD 2024 and paper-derived catalog; {view} view.\nApproval is drug-level, may be outside the U.S., and missing records do not establish failure.',fontsize=8,color='#526978')
+    fig.tight_layout(rect=(0,.09,1,1));save(fig,out/'drug-category-approval')
+
+    bins=['1','2','3–4','5–9','10+']; counts=[summary['degree'][b] for b in bins]
+    fig,ax=plt.subplots(figsize=(9,4.8)); bars=ax.bar(bins,counts,color=[COLORS(.3+.6*n/max(counts)) for n in counts])
+    ax.bar_label(bars,labels=[f'{n:,}' for n in counts],padding=4,fontsize=9)
+    ax.set_ylim(0,max(counts)*1.15);ax.set_xlabel('Number of linked target records per drug')
+    ax.set_ylabel('Distinct drug records');ax.set_title('How many targets are linked to each drug?',loc='left',weight='bold',fontsize=16)
+    ax.grid(axis='y',color='#e3ecef');ax.set_axisbelow(True)
+    fig.text(.02,.015,f'TTD 2024 snapshot and paper-derived catalog; {view} view.\nLinks reflect source coverage and grouping, not proven clinical mechanisms.',fontsize=8,color='#526978')
+    fig.tight_layout(rect=(0,.09,1,1));save(fig,out/'drug-target-degree')
+
+    queue=summary['queue']
+    if queue:
+        fig,ax=plt.subplots(figsize=(10,7)); y=range(len(queue));counts=[r['linked_drugs'] for r in queue]
+        ax.hlines(y,0,counts,color='#b8d7df',linewidth=4);ax.scatter(counts,y,s=60,color='#cf703b',zorder=3)
+        for i,n in enumerate(counts):ax.text(n+.5,i,str(n),va='center',fontsize=9)
+        ax.set_yticks(list(y),[display(r) for r in queue]);ax.invert_yaxis();ax.set_xlim(0,max(counts)*1.18)
+        ax.set_xlabel('Distinct linked drug records');ax.set_title('Targets with no approval recorded in this snapshot',loc='left',weight='bold',fontsize=15)
+        ax.grid(axis='x',color='#e3ecef');ax.set_axisbelow(True)
+        fig.text(.02,.015,f'TTD 2024 snapshot and paper-derived catalog; {view} view.\nA missing approval is not proof of no approval, drug failure, or target failure.',fontsize=8,color='#526978')
+        fig.tight_layout(rect=(0,.07,1,1));save(fig,out/'targets-no-recorded-approval')
 
 
 def draw_heatmap(matrix,labels,columns,title,footnote,path,figsize):

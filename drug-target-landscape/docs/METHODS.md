@@ -13,6 +13,10 @@ The `drug_target_landscape` view has one retained row per drug–target pair. An
 
 An approval count includes source-reported approvals that may be outside the U.S. It does not mean each target was validated as the mechanism of the approved indication. No recorded approval does not establish that none exists.
 
+## Additional descriptive analyses
+
+Target classes count each retained target record once. Drug modality and recorded approval count each distinct drug ID once across all eligible links. Target degree counts the number of distinct eligible target IDs linked to each drug, grouped into 1, 2, 3–4, 5–9, or 10+ links. For the missing-approval review queue, rank target records by distinct linked drug IDs and retain targets for which none of those IDs has `approval_reported=1`. A zero reflects this snapshot's evidence, not a definitive approval or failure determination. The analysis checks that drug modality and approval status are consistent across a drug's retained links.
+
 ## Study-date heatmap
 
 For eligible pairs, parse the source-linked `candidate_study_date_proxy` in relationship evidence, select 2015–2024, and count distinct drug IDs per target and year. A drug may appear in several years. These study links can be name-matched candidates; a date is not necessarily first clinical entry. Coverage is incomplete, so empty cells do not mean no studies occurred.

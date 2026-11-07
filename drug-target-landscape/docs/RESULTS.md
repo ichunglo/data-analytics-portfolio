@@ -28,6 +28,30 @@ Among the targets in this view, CD19 has **62 distinct linked drug records** wit
 
 ![Candidate study dates across targets from 2015 to 2024](../figures/target-by-year.png)
 
+## Which target classes are represented?
+
+The selected view contains **623 target records classified as other enzymes**, 206 as kinases, 193 as GPCRs, and 159 as ion channels. A further **385 records have an unclear class**. These are target records, not numbers of drugs; the broad “other” groups reflect the available classification and should not be interpreted as a single protein family.
+
+![Target records by source-derived target class](../figures/target-classes.png)
+
+## What kinds of drugs are represented, and which have a recorded approval?
+
+The selected view contains **6,141 small-molecule records** and **2,120 biologic records**. Sources report approval for 2,349 and 294 of those records, respectively; the remainder have no approval recorded in this snapshot. Another **2,229 drug records have an unknown category**. Each drug is counted once, even if linked to multiple targets. Counts depend on classification and source coverage; comparing the portions does not yield clinical success rates.
+
+![Distinct drug records by modality and source-reported approval](../figures/drug-category-approval.png)
+
+## How many targets are linked to each drug?
+
+In this view, **8,619 drug records have one retained target link** and **2,160 have two or more**. This measures the connections in the database, not the number of targets each drug is known to bind in reality. Differences in source coverage, identity matching, target grouping, and the view's selection rules affect the counts.
+
+![Distribution of distinct drug records by number of linked targets](../figures/drug-target-degree.png)
+
+## Which well-connected targets have no approval recorded?
+
+Within this snapshot and selected view, **MSLN** has 31 linked drug records, **MUC1** has 28, and **CEACAM5** has 24; none of the linked records has a source-reported approval in this dataset. This is a **priority list for checking sources**, not proof that these targets or drugs lack approval, nor that their development failed. Approval is a drug-level field and source coverage is incomplete.
+
+![Targets with the most linked drugs and no source-reported drug approval](../figures/targets-no-recorded-approval.png)
+
 ## How can the results guide follow-up?
 
 An analyst can use the ranking to select target–drug records for **source verification**, beginning with targets that have many linked records or few recorded approvals. For example, the snapshot has 31 linked MSLN records and no approval recorded among them. That is a review queue, **not evidence that the target is unapproved or that its development failed**. The interactive dashboard exposes the underlying records and source links.
