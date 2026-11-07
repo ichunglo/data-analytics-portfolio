@@ -1,3 +1,5 @@
+import csv
+import json
 import sqlite3
 import sys
 import tempfile
@@ -8,6 +10,7 @@ PROJECT=Path(__file__).resolve().parents[1]
 sys.path[:0]=[str(PROJECT/'src'),str(PROJECT/'examples')]
 from analyze import analyze, summarize
 from create_demo import create
+from export_dashboard import export
 
 
 class AnalysisTest(unittest.TestCase):
@@ -46,6 +49,21 @@ class AnalysisTest(unittest.TestCase):
         data=analyze(self.db,'clinical')
         data['ranking'][1]['reported_approved']=0
         self.assertEqual([r['target_id'] for r in summarize(data)['queue']],['T2'])
+
+    def test_dashboard_export_limits_rows_and_preserves_counts(self):
+        directory=Path(self.temp.name); ranking=directory/'ranking.csv'; manifest=directory/'manifest.json'; output=directory/'data.js'
+        fields=['target_id','target_name','gene_symbol','target_category','linked_drugs','reported_approved']
+        with ranking.open('w',encoding='utf8',newline='') as f:
+            writer=csv.DictWriter(f,fieldnames=fields);writer.writeheader()
+            for i in range(55): writer.writerow(dict(zip(fields,[f'T{i}',f'Target {i}',f'G{i}','GPCRs',100-i,2])))
+        manifest.write_text(json.dumps({'scope':'clinical'}),encoding='utf8')
+        export(ranking,manifest,output)
+        text=output.read_text(encoding='utf8')
+        data=json.loads(text.removeprefix('window.LANDSCAPE_DATA = ').removesuffix(';\n'))
+        self.assertEqual(len(data['targets']),50)
+        self.assertEqual((data['targets'][0]['linked_drugs'],data['targets'][0]['reported_approved']),(100,2))
+        manifest.write_text(json.dumps({'scope':'broad'}),encoding='utf8')
+        with self.assertRaises(ValueError):export(ranking,manifest,output)
 
 
 if __name__=='__main__':unittest.main()

@@ -2,7 +2,7 @@
 
 **Research question:** Which targets are linked to the most drug records with a reported clinical phase or approval, and how does the evidence vary across target types, drug categories, and time?
 
-[**Explore the interactive dashboard**](https://ichunglo.github.io/posts/2026-10-02-drug-target-landscape/) · [Results](docs/RESULTS.md) · [Methods](docs/METHODS.md) · [Data sources](docs/DATA_SOURCES.md) · [SQL](sql/target_rankings.sql) · [Python](src/analyze.py)
+[**Explore the analytics dashboard**](https://ichunglo.github.io/data-analytics-portfolio/drug-target-landscape/dashboard/) · [Full blog explorer](https://ichunglo.github.io/posts/2026-10-02-drug-target-landscape/) · [Results](docs/RESULTS.md) · [Methods](docs/METHODS.md) · [Data sources](docs/DATA_SOURCES.md) · [SQL](sql/target_rankings.sql) · [Python](src/analyze.py)
 
 ## Project at a glance
 
@@ -17,6 +17,8 @@ In this selected view, **CD19** is linked to 189 drug records, of which 12 have 
 Build a research-ready overview of drug–target relationships that lets a drug-discovery analyst identify well-represented targets, examine source-supported development status, and decide which associations warrant further review. The workflow records uncertainty rather than interpreting missing approval as failure.
 
 ## Workflow and data model
+
+![Architecture showing source evidence, curation, SQLite, SQL and Python analysis, and published outputs](figures/data-pipeline-architecture.svg)
 
 ```mermaid
 flowchart LR
@@ -43,6 +45,16 @@ The SQLite snapshot stores drugs, targets, relationships, source evidence, study
 ![Heatmap of target records and selected study-date candidate years](figures/target-by-year.png)
 
 [View all figures and findings →](docs/RESULTS.md)
+
+## Interactive dashboard
+
+The [analytics dashboard](https://ichunglo.github.io/data-analytics-portfolio/drug-target-landscape/dashboard/) displays the **50 targets with the most linked drug records** in this snapshot. Search by target name, filter by target class, or sort by linked drug count and source-reported approvals. The headline metrics cover the entire selected view; the interactive target list covers only those top 50. The [blog explorer](https://ichunglo.github.io/posts/2026-10-02-drug-target-landscape/) provides a separate way to explore underlying target records.
+
+The dashboard contains a small precomputed aggregate, not the full source database. Recreate it after running the real-data analysis:
+
+```bash
+python drug-target-landscape/src/export_dashboard.py --ranking analysis-output/actual/target-ranking.csv --manifest analysis-output/actual/analysis-manifest.json --out drug-target-landscape/dashboard/data.js
+```
 
 ## Run the reproducible demo
 
@@ -84,6 +96,8 @@ Use `--scope broad` to include all retained source relationships. That broader v
 drug-target-landscape/
 ├── README.md               Project overview and quickstart
 ├── src/analyze.py          Read-only analysis and figure generation
+├── src/export_dashboard.py Export the top-50 dashboard aggregate
+├── dashboard/              Interactive, static portfolio dashboard
 ├── sql/target_rankings.sql Distinct drug counts and source-reported approvals
 ├── examples/               Fictional demo database generator
 ├── tests/                  Counting and deduplication tests
