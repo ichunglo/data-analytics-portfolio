@@ -1,0 +1,20 @@
+project:
+  type: website
+  output-dir: _site
+  resources:
+    - dashboard/ai-biotech-cover.webp
+  render:
+    - index.qmd
+    - dashboard/index.qmd
+website:
+  title: "AI Biotech Landscape"
+  navbar:
+    left:
+      - text: Overview
+        href: index.qmd
+      - text: Dashboard
+        href: dashboard/index.qmd
+format:
+  html:
+    theme: litera
+    toc: false

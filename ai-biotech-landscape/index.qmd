@@ -1,0 +1,10 @@
+---
+title: "AI Biotech Landscape"
+description: "A source-linked, curated snapshot of AI biotech companies, applications, programs and ownership."
+---
+
+Explore a curated snapshot of 55 companies, 81 asset–indication records and 90 registry studies as of November 11–12, 2026. The counts describe this collection and are not a market census.
+
+[Open the interactive dashboard](dashboard/index.qmd)
+
+The project README documents the dataset, workflow, reproducibility limitations and source rights.

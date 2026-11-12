@@ -14,3 +14,10 @@ jobs:
       - run: python drug-target-landscape/examples/create_demo.py --out "$RUNNER_TEMP/demo.sqlite"
       - run: python drug-target-landscape/src/analyze.py --db "$RUNNER_TEMP/demo.sqlite" --out "$RUNNER_TEMP/analysis-output"
       - run: python drug-target-landscape/src/export_dashboard.py --ranking "$RUNNER_TEMP/analysis-output/target-ranking.csv" --manifest "$RUNNER_TEMP/analysis-output/analysis-manifest.json" --out "$RUNNER_TEMP/dashboard/data.js"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node ai-biotech-landscape/scripts/build_audits.js
+      - run: python -m unittest discover -s ai-biotech-landscape/tests -v
+      - uses: quarto-dev/quarto-actions/setup@v2
+      - run: quarto render ai-biotech-landscape
